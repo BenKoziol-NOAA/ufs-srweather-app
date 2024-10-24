@@ -10,6 +10,9 @@ import xarray as xr
 import numpy as np
 from netCDF4 import Dataset
 
+from ush.generate_fire_emissions_logging import GEWLOG
+
+
 #Create date range, this is later used to search for RAVE and HWP from previous 24 hours
 def date_range(current_day, ebb_dcycle):
     print(f'Searching for interpolated RAVE for {current_day}')
@@ -83,7 +86,7 @@ def check_for_raw_rave(RAVE, intp_non_avail_hours, intp_avail_hours):
 
 #Create source and target fields
 def creates_st_fields(grid_in, grid_out, intp_dir, rave_avail_hours):
-
+    GEWLOG.info('interp_tools.creates_st_fields: enter')
     # Open datasets with context managers
     with xr.open_dataset(grid_in) as ds_in, xr.open_dataset(grid_out) as ds_out:
         tgt_area = ds_out['area']
@@ -91,13 +94,18 @@ def creates_st_fields(grid_in, grid_out, intp_dir, rave_avail_hours):
         tgt_lont = ds_out['grid_lont']
         src_latt = ds_in['grid_latt']
 
+        GEWLOG.info('interp_tools.creates_st_fields: before grid creation')
         srcgrid = ESMF.Grid(np.array(src_latt.shape), staggerloc=[ESMF.StaggerLoc.CENTER, ESMF.StaggerLoc.CORNER], coord_sys=ESMF.CoordSys.SPH_DEG)
         tgtgrid = ESMF.Grid(np.array(tgt_latt.shape), staggerloc=[ESMF.StaggerLoc.CENTER, ESMF.StaggerLoc.CORNER], coord_sys=ESMF.CoordSys.SPH_DEG)
+        GEWLOG.info('interp_tools.creates_st_fields: after grid creation')
 
+        GEWLOG.info('interp_tools.creates_st_fields: before field creation')
         srcfield = ESMF.Field(srcgrid, name='test', staggerloc=ESMF.StaggerLoc.CENTER)
         tgtfield = ESMF.Field(tgtgrid, name='test', staggerloc=ESMF.StaggerLoc.CENTER)
+        GEWLOG.info('interp_tools.creates_st_fields: after field creation')
 
     print('Grid in and out files available. Generating target and source fields')
+    GEWLOG.info('interp_tools.creates_st_fields: exit')
     return(srcfield, tgtfield, tgt_latt, tgt_lont, srcgrid, tgtgrid, src_latt, tgt_area)
 
 #Define output and variable meta data
