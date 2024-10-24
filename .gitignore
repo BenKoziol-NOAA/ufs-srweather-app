@@ -26,3 +26,4 @@ conda_loc
 
 *.swp
 __pycache__
+*.idea
