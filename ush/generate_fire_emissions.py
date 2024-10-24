@@ -15,6 +15,8 @@ import numpy as np
 import fire_emiss_tools as femmi_tools
 import HWP_tools
 import interp_tools as i_tools
+from generate_fire_emissions_logging import GEWLOG
+
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Workflow
@@ -31,6 +33,7 @@ def generate_emiss_workflow(staticdir, ravedir, intp_dir, predef_grid, ebb_dcycl
    # Set predefined grid
    # Set directories 
    # ----------------------------------------------------------------------
+   GEWLOG.info('entering generate_emiss_workflow')
    beta = 0.3
    fg_to_ug = 1e6
    to_s = 3600
@@ -68,20 +71,27 @@ def generate_emiss_workflow(staticdir, ravedir, intp_dir, predef_grid, ebb_dcycl
    # ----------------------------------------------------------------------
    # Sort raw RAVE, create source and target filelds, and compute emissions 
    # ----------------------------------------------------------------------
+   GEWLOG.info('before i_tools.date_range')
    fcst_dates = i_tools.date_range(current_day, ebb_dcycle)
+   GEWLOG.info('before i_tools.check_for_intp_rave')
    intp_avail_hours, intp_non_avail_hours, inp_files_2use = i_tools.check_for_intp_rave(intp_dir, fcst_dates, rave_to_intp)
+   GEWLOG.info('before i_tools.check_for_raw_rave')
    rave_avail, rave_avail_hours, rave_nonavail_hours_test, first_day = i_tools.check_for_raw_rave(RAVE, intp_non_avail_hours, intp_avail_hours)
+   GEWLOG.info('before i_tools.create_st_fields')
    srcfield, tgtfield, tgt_latt, tgt_lont, srcgrid, tgtgrid, src_latt, tgt_area = i_tools.creates_st_fields(grid_in, grid_out, intp_dir, rave_avail_hours) 
   
    if not first_day:
+       GEWLOG.info('before i_tools.generate_regrider')
        regridder, use_dummy_emiss = i_tools.generate_regrider(rave_avail_hours, srcfield, tgtfield, weightfile, inp_files_2use, intp_avail_hours)
        if use_dummy_emiss:
            print('RAVE files corrupted, no data to process')
            i_tools.create_dummy(intp_dir, current_day, tgt_latt, tgt_lont, cols, rows)
        else:
+           GEWLOG.info('before i_tools.interpolate_rave')
            i_tools.interpolate_rave(RAVE, rave_avail, rave_avail_hours,
                                     use_dummy_emiss, vars_emis, regridder, srcgrid, tgtgrid, rave_to_intp,
                                     intp_dir, src_latt, tgt_latt, tgt_lont, cols, rows)
+           GEWLOG.info('after i_tools.interpolate_rave')
 
            if ebb_dcycle == 1:
                print('Processing emissions forebb_dcyc 1')
@@ -101,6 +111,7 @@ def generate_emiss_workflow(staticdir, ravedir, intp_dir, predef_grid, ebb_dcycl
    else:
        print('First day true, no RAVE files available. Use dummy emissions file')
        i_tools.create_dummy(intp_dir, current_day, tgt_latt, tgt_lont, cols, rows)
+   GEWLOG.info('exiting generate_emiss_workflow')
 
 if __name__ == '__main__':
 
@@ -109,7 +120,9 @@ if __name__ == '__main__':
         print('Welcome to interpolating RAVE and processing fire emissions!')
         print('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
         print('')
+        GEWLOG.info('before generate_emiss_workflow')
         generate_emiss_workflow(sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4], sys.argv[5], sys.argv[6])
+        GEWLOG.info('after generate_emiss_workflow')
         print('')
         print('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
         print('Successful Completion. Bye!')
