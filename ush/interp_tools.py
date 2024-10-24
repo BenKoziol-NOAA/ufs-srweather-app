@@ -10,7 +10,7 @@ import xarray as xr
 import numpy as np
 from netCDF4 import Dataset
 
-from ush.generate_fire_emissions_logging import GEWLOG
+from generate_fire_emissions_logging import GEWLOG
 
 
 #Create date range, this is later used to search for RAVE and HWP from previous 24 hours
